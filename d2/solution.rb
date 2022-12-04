@@ -16,17 +16,19 @@ opponent_plays = {
   'C' => 'Scissors',
 }
 
-my_plays = {
-  'X' => 'Rock'    ,
-  'Y' => 'Paper'   ,
-  'Z' => 'Scissors',
+game_expectation = {
+  'X' => :lose,
+  'Y' => :draw,
+  'Z' => :win,
 }
 
-rules = {
+win_rules = {
   'Scissors' => 'Paper',
   'Paper' => 'Rock',
   'Rock' => 'Scissors',
 }
+
+lose_rules = win_rules.invert
 
 play_score = {
   'Rock' => 1,
@@ -45,14 +47,24 @@ results = str_guide.split("\n").map do |play|
   o_coded_play, m_coded_play = play.split
 
   o_play = opponent_plays[o_coded_play]
-  m_play = my_plays[m_coded_play]
+
+  round_expectation = game_expectation[m_coded_play]
+
+  m_play = case round_expectation
+  when :draw
+    o_play
+  when :lose
+    win_rules[o_play]
+  else
+    lose_rules[o_play]
+  end
 
   o_play_score = play_score[o_play]
   m_play_score = play_score[m_play]
 
   round_result = if o_play == m_play
     :draw
-  elsif rules[o_play] == m_play
+  elsif win_rules[o_play] == m_play
     :lost
   else
     :win
@@ -64,4 +76,5 @@ results = str_guide.split("\n").map do |play|
   OpenStruct.new(o_play:, m_play:, round_score:)
 end
 
+# puts results
 puts results.sum(&:round_score)
