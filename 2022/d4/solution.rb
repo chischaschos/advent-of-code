@@ -20,7 +20,9 @@ overlap_results = input.split("\n").map do |assignment|
   b1, e1 = a1.split('-').map(&:to_i)
   b2, e2 = a2.split('-').map(&:to_i)
 
-  b1 >= b2 && e1 <= e2 || b2 >= b1 && e2 <= e1
+  (b1..e1).to_a.find_all do |i|
+    i >= b2 && i <= e2
+  end
 end
 
-puts overlap_results.count { |overlap_result| overlap_result }
+puts overlap_results.count { |overlap_result| overlap_result.size.positive? }
