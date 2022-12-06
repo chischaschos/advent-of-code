@@ -1,31 +1,40 @@
 require 'debug'
 require 'ostruct'
 
+input = <<~INPUT
+  vJrwpWtwJgWrhcsFMMfFFhFp
+  jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+  PmmdzqPrVvPwwTWBwg
+  wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+  ttgJtRGJQctTZtZT
+  CrZsJsPPZsGzwwsLwLmpwMDw
+INPUT
 
-# input = <<~INPUT
-#   vJrwpWtwJgWrhcsFMMfFFhFp
-#   jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
-#   PmmdzqPrVvPwwTWBwg
-#   wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
-#   ttgJtRGJQctTZtZT
-#   CrZsJsPPZsGzwwsLwLmpwMDw
-# INPUT
-
-input = IO.read('input.txt')
+# input = IO.read('input.txt')
 
 priorities = ('a'..'z').to_a + ('A'..'Z').to_a
 
-common_items = input.split("\n").map do |rucksack|
-  c1, c2 = rucksack[0..rucksack.length/2-1], rucksack[rucksack.length/2..-1]
+common_items_per_group = input.split("\n").each_slice(3).map do |r1, r2, r3|
+  set = Hash.new { |h, k| h[k] = false }
+  union_r1_r2 = Hash.new { |h, k| h[k] = false }
+  union = Hash.new { |h, k| h[k] = false }
 
-  binding.break if c1.length != c2.length
-
-  c1.chars.find do |item|
-    c2.index(item)
+  r1.chars.each do |i|
+    set[i] = true
   end
+
+  r2.chars.each do |i|
+    union_r1_r2[i] = true if set.key?(i)
+  end
+
+  r3.chars.each do |i|
+    union[i] = true if union_r1_r2.key?(i)
+  end
+
+  union.keys.first
 end
 
-common_item_priorities = common_items.map do |item|
+common_item_priorities = common_items_per_group.map do |item|
   priorities.index(item) + 1
 end.to_a
 
