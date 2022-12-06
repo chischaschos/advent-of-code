@@ -1,16 +1,16 @@
 require 'debug'
 require 'ostruct'
 
-input = <<~INPUT
-  vJrwpWtwJgWrhcsFMMfFFhFp
-  jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
-  PmmdzqPrVvPwwTWBwg
-  wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
-  ttgJtRGJQctTZtZT
-  CrZsJsPPZsGzwwsLwLmpwMDw
-INPUT
+# input = <<~INPUT
+#   vJrwpWtwJgWrhcsFMMfFFhFp
+#   jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+#   PmmdzqPrVvPwwTWBwg
+#   wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+#   ttgJtRGJQctTZtZT
+#   CrZsJsPPZsGzwwsLwLmpwMDw
+# INPUT
 
-# input = IO.read('input.txt')
+input = IO.read('input.txt')
 
 priorities = ('a'..'z').to_a + ('A'..'Z').to_a
 
