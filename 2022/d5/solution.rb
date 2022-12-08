@@ -47,10 +47,10 @@ puts queues.inspect
 input.split("\n")[stop_at + 2..].each do |command|
   quantity, from, to = command.match(/move (\d+) from (\d+) to (\d+)/).captures.map(&:to_i)
 
-  quantity.times do
-    cargo = queues[from - 1].shift(1)
+  # quantity.times do
+    cargo = queues[from - 1].shift(quantity)
     queues[to - 1].unshift(*cargo)
-  end
+  # end
 end
 
 puts queues.inspect
