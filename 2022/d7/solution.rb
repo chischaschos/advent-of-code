@@ -2,103 +2,10 @@
 # TODO: why to_s vs to_str
 
 require 'debug'
+require_relative 'foo_file'
+require_relative 'tree'
+require_relative 'node'
 
-class FooFile
-  attr_reader :name, :type
-  attr_accessor :size
-
-  def initialize(size: 0, name:, type:)
-    @size = size
-    @name = name
-    @type = type
-  end
-
-  def to_s
-    "#{type}, size=#{size}"
-  end
-end
-
-class Node
-  attr_reader :file
-  attr_reader :children
-  attr_reader :parent
-
-  def initialize(parent:, file:)
-    @file = file
-    @children = []
-    @parent = parent
-  end
-
-  def type
-    file.type
-  end
-
-  def name
-    file.name
-  end
-
-  def size
-    file.size
-  end
-
-  def size=(s)
-    file.size = s
-  end
-
-  def to_s
-    to_str
-  end
-
-  def to_str
-    "- #{name} (#{file})"
-  end
-end
-
-class Tree
-  attr_reader :root
-  attr_reader :current
-
-  def initialize
-    file = FooFile.new(name: '/', type: :directory)
-    @root = Node.new(parent: nil, file:)
-    @current = @root
-  end
-
-  def root!
-    @current = root
-  end
-
-  def add_file(file)
-    add_size(current, file.size) if file.type == :file
-    current.children << Node.new(parent: current, file:)
-  end
-
-  def down!(directory_name)
-    directory = current.children.find do |child|
-      child.type == :directory && child.name == directory_name
-    end
-
-    # binding.break
-    raise "#{directory_name} does not exists" unless directory
-
-    @current = directory
-  end
-
-  def up!
-    @current = current.parent
-  end
-
-  private
-
-  def add_size(node, size)
-    return if node.nil?
-
-    node.size += size
-    add_size(node.parent, size)
-  end
-end
-
-tree = Tree.new
 
 # input = <<~INPUT
 #   $ cd /
@@ -127,6 +34,8 @@ tree = Tree.new
 # INPUT
 
 input = IO.read('input.txt')
+
+tree = Tree.new
 
 input.split("\n").each do |line|
   case line
@@ -162,25 +71,29 @@ input.split("\n").each do |line|
   end
 end
 
-def nav(node, depth: 0, &block)
-  block.call(node, depth)
-
-  node.children.each do |c|
-    nav(c, depth: depth + 1, &block)
-  end
-end
-
-nav(tree.root) do |node, depth|
-  puts ' ' * depth + node
-end
-
-puts "\ndirs with at most 100000"
-
 directories = []
-nav(tree.root) do |node, depth|
+Tree.nav(tree.root) do |node, depth|
   directories << node if node.type == :directory
 end
 
-puts directories.find_all { |d| d.size <= 100000 }
-puts directories.find_all { |d| d.size <= 100000 }
-  .sum { |d| d.size }
+MAX_SIZE = 70_000_000
+CURRENT_SIZE = tree.root.size
+AVAILABLE_SIZE = MAX_SIZE - CURRENT_SIZE
+MIN_SPACE_FOR_UPDATE = 30_000_000
+MAX_DIR_SIZE = MIN_SPACE_FOR_UPDATE - AVAILABLE_SIZE
+
+
+puts "---- Tree"
+puts tree
+puts "---- Root size"
+puts tree.root.size
+puts "---- Available space"
+puts AVAILABLE_SIZE
+puts "---- Need at least"
+puts MAX_DIR_SIZE
+puts "---- Files to free enough for update"
+puts directories.find_all { |d| d.size >= MAX_DIR_SIZE }
+puts "---- Min"
+min_file = directories.find_all { |d| d.size >= MAX_DIR_SIZE }.min
+puts min_file.name
+puts min_file.size
