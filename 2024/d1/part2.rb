@@ -5,7 +5,7 @@
 
 require 'debug'
 
-list = IO.read('../d1/input.txt')
+list = IO.read('input.txt')
 
 l1 = []
 l2 = Hash.new(0)
