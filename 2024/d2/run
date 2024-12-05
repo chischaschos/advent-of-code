@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+require_relative 'solution1'
+
+input = IO.read('input.txt')
+
+input = input.split("\n").map do |row|
+  row.split.map(&:to_i)
+end
+
+puts "Valid reports #{count_valid_reports(input)}"
+puts "Valid reports w/dampening #{count_valid_reports(input, dampening: true)}"
