@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+# require_relative 'solution'
+
+input = IO.read('input.txt')
+
+puts input.scan(/mul\((\d+),(\d+)\)/)
+          .map { |a, b| a.to_i * b.to_i }.sum
