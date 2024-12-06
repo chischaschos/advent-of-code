@@ -17,45 +17,47 @@ class Part1Test < Minitest::Test
       [8, 6, 4, 4, 1],
       [41, 37, 35, 34, 33],
       [37, 35, 34, 33, 37],
-      [37, 35, 34, 33, 29]
+      [37, 35, 34, 33, 29],
+      [10, 9, 10, 13, 15, 16],
+      [10, 9, 10, 8, 7, 6, 5]
     ]
   end
 
   def test_safe_report
     assert safe_report?(@input[0])
-    refute safe_report?(@input[1])
-    refute safe_report?(@input[2])
-    refute safe_report?(@input[3])
-    refute safe_report?(@input[4])
-    assert safe_report?(@input[5])
-    refute safe_report?(@input[6])
-    refute safe_report?(@input[7])
-    refute safe_report?(@input[8])
-    refute safe_report?(@input[9])
-  end
-
-  def test_safe_report_with_dampening
     assert safe_report?(@input[0], dampening: true)
 
+    refute safe_report?(@input[1])
     refute safe_report?(@input[1], dampening: true)
+
+    refute safe_report?(@input[2])
     refute safe_report?(@input[2], dampening: true)
 
+    refute safe_report?(@input[3])
     assert safe_report?(@input[3], dampening: true)
+
+    refute safe_report?(@input[4])
     assert safe_report?(@input[4], dampening: true)
+
+    assert safe_report?(@input[5])
     assert safe_report?(@input[5], dampening: true)
+
+    refute safe_report?(@input[6])
     assert safe_report?(@input[6], dampening: true)
 
-    assert safe_report?(@input[7], dampening: true), 'safe if remove 41'
-    assert safe_report?(@input[8], dampening: true), 'safe if remove 37'
-    assert safe_report?(@input[9], dampening: true), 'safe if remove 29'
-  end
+    refute safe_report?(@input[7])
+    assert safe_report?(@input[7], dampening: true)
 
-  def test_individual
-    assert safe_report?('10 13 13 15 16'.split.map(&:to_i), dampening: true)
-  end
+    refute safe_report?(@input[8])
+    assert safe_report?(@input[8], dampening: true)
 
-  def test_count_valid_reports
-    assert_equal count_valid_reports(@input), 2
-    assert_equal count_valid_reports(@input, dampening: true), 8
+    refute safe_report?(@input[9])
+    assert safe_report?(@input[9], dampening: true)
+
+    refute safe_report?(@input[10])
+    assert safe_report?(@input[10], dampening: true)
+
+    refute safe_report?(@input[11])
+    assert safe_report?(@input[11], dampening: true)
   end
 end
