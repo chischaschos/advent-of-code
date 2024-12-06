@@ -4,7 +4,29 @@
 require 'debug'
 # require_relative 'solution'
 
-input = IO.read('input.txt')
+input = IO.read('input.txt').chars
 
-puts input.scan(/mul\((\d+),(\d+)\)/)
-          .map { |a, b| a.to_i * b.to_i }.sum
+dont_chars = "don't()".chars
+do_chars = 'do()'.chars
+index = 0
+
+enabled_str = []
+enabled = true
+
+loop do
+  break if index >= input.size
+
+  if input[index..index + 6] == dont_chars
+    enabled = false
+    index += 6
+  elsif input[index..index + 3] == do_chars
+    enabled = true
+    index += 4
+  else
+    enabled_str << input[index] if enabled
+    index += 1
+  end
+end
+
+puts enabled_str.join.scan(/mul\((\d+),(\d+)\)/)
+                .map { |a, b| a.to_i * b.to_i }.sum
