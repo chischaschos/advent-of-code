@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+
+def finder(input)
+  input.each do |row|
+    row.each_with_index do |char, index|
+      next unless char == 'X'
+
+      word = row[index...index + 4].join
+      puts '>>' + word if word == 'XMAS'
+    end
+  end
+end
+
+def get_all_diagonals(matrix)
+  rows = matrix.size
+  cols = matrix[0].size
+
+  diagonals = []
+  (1 - rows..cols - 1).each do |k|
+    diagonal = []
+    (0...rows).each do |i|
+      j = i + k
+      diagonal << matrix[i][j] if j >= 0 && j < cols
+    end
+    diagonals << diagonal unless diagonal.empty?
+  end
+
+  diagonals
+end
+
+input = IO.read('input.txt').split.map(&:chars)
+
+
+finder(input)
+finder(input.map(&:reverse))
+
+finder(input.transpose)
+finder(input.transpose.map(&:reverse))
+
+finder(get_all_diagonals(input))
+finder(get_all_diagonals(input).map(&:reverse))
+
+finder(get_all_diagonals(input.map(&:reverse)))
+finder(get_all_diagonals(input.map(&:reverse)).map(&:reverse))
