@@ -33,7 +33,6 @@ end
 
 input = IO.read('input.txt').split.map(&:chars)
 
-
 finder(input)
 finder(input.map(&:reverse))
 

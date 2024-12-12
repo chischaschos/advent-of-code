@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+
+input = IO.read('input.txt').split.map(&:chars) # 1881
+
+# input = [
+#   '.M.S......',
+#   '..A..MSMS.',
+#   '.M.S.MAA..',
+#   '..A.ASMSM.',
+#   '.M.S.M....',
+#   '..........',
+#   'S.S.S.S.S.',
+#   '.A.A.A.S.M',
+#   'M.M.M.M.A.',
+#   '.......S.M'
+# ].map(&:chars) # 9
+
+x = 0
+y = 0
+
+loop do
+  m = input[y][x..x + 2] + input[y + 1][x..x + 2] + input[y + 2][x..x + 2]
+  word = m[0] + m[2] + m[4] + m[6] + m[8]
+
+  # M.M
+  # .A.
+  # S.S
+  #
+  # M.S
+  # .A.
+  # M.S
+  #
+  # S.S
+  # .A.
+  # M.M
+  #
+  # S.M
+  # .A.
+  # S.M
+  puts 'match' if %w[MMASS MSAMS SSAMM SMASM].include?(word)
+
+  x += 1
+
+  if x + 3 >  input.size
+    x = 0
+    y += 1
+  end
+
+  break if y + 3 >  input.size
+end
