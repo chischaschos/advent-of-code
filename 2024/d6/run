@@ -1,0 +1,112 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+
+input = <<~TEST_INPUT
+  ....#.....
+  .........#
+  ..........
+  ..#.......
+  .......#..
+  ..........
+  .#..^.....
+  ........#.
+  #.........
+  ......#...
+TEST_INPUT
+
+input = IO.read('input.txt')
+
+LOOK_UP = '^'
+LOOK_DOWN = 'v'
+LOOK_RIGHT = '>'
+LOOK_LEFT = '<'
+
+start = input.delete("\n").index(LOOK_UP)
+map = input.split("\n").map { |line| line.chars }
+col = start % map[0].size
+row = start / map[0].size
+
+class Guard
+  DIRECTIONS = [LOOK_UP, LOOK_RIGHT, LOOK_DOWN, LOOK_LEFT].cycle
+
+  def initialize(row:, col:, map:)
+    @row = row
+    @col = col
+    @map = map
+    @direction = LOOK_UP
+  end
+
+  def position
+    [@row, @col]
+  end
+
+  def move!
+    return if out?
+
+    if obstacle_ahead?
+      turn!
+      return
+    end
+
+    @map[@row][@col] = 'X'
+
+    if @direction == LOOK_UP
+      @row -= 1
+
+    elsif @direction == LOOK_RIGHT
+      @col += 1
+
+    elsif @direction == LOOK_DOWN
+      @row += 1
+
+    elsif @direction == LOOK_LEFT
+      @col -= 1
+    end
+
+    return if out?
+
+    @map[@row][@col] = @direction
+  end
+
+  def obstacle_ahead?
+    if @direction == LOOK_UP
+      @map.fetch(@row - 1, [])[@col] == '#'
+
+    elsif @direction == LOOK_RIGHT
+      @map.fetch(@row, [])[@col + 1] == '#'
+
+    elsif @direction == LOOK_DOWN
+      @map.fetch(@row + 1, [])[@col] == '#'
+
+    elsif @direction == LOOK_LEFT
+      @map.fetch(@row, [])[@col - 1] == '#'
+    end
+  end
+
+  def turn!
+    @direction = DIRECTIONS.next
+    @map[@row][@col] = @direction
+  end
+
+  def out?
+    @col < 0 || @col >= @map.size || @row < 0 || @row >= @map.size
+  end
+end
+
+guard = Guard.new(row:, col:, map:)
+positions = [[row, col]]
+
+loop do
+  guard.move!
+  positions << guard.position
+  break if guard.out?
+end
+
+
+puts map.map {|r| r.join}.join.chars.count {|c| c=='X'}
+
+# map.each do |r|
+#   puts r.join
+# end
