@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'debug'
+
+input = <<~TEST_INPUT
+47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13
+
+75,47,61,53,29
+97,61,53,29,13
+75,29,13
+75,97,47,61,53
+61,13,29
+97,13,75,29,47
+TEST_INPUT
+
+input = IO.read('input.txt')
+cut_index = input.index("\n\n")
+
+rules_str = input[..cut_index].split
+pages_str = input[cut_index..].split
+
+rules = Hash.new { |hash, key| hash[key] = Set.new }
+
+rules_str.each do |r|
+  p1, p2 = r.split("|")
+
+  rules[p1] << p2
+end
+
+mids = 0
+
+pages_str.each do |pages|
+
+  valid = true
+  split_pages = pages.split(",")
+  split_pages.each_with_index do |page, index|
+    # debugger
+    prev = Set.new(split_pages[...index])
+    found =  (rules[page] & prev).empty?
+
+    unless found
+      valid = false
+      break
+    end
+  end
+
+  mids += split_pages[split_pages.size/2].to_i if valid
+  # puts "#{pages} valid? #{valid}"
+  puts valid
+  valid = true
+end
+
+puts mids
