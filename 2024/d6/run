@@ -3,6 +3,67 @@
 
 require 'debug'
 
+class Guard
+
+  LOOK_UP = '^'
+  LOOK_DOWN = 'v'
+  LOOK_RIGHT = '>'
+  LOOK_LEFT = '<'
+  DIRECTIONS = [LOOK_UP, LOOK_RIGHT, LOOK_DOWN, LOOK_LEFT].cycle
+
+  attr_accessor :row, :col, :direction, :previous_states
+
+  def initialize(row:, col:, lab_map:)
+    @row = row
+    @col = col
+    @lab_map = lab_map
+    @direction = LOOK_UP
+    @previous_states = [state]
+  end
+
+  def move!
+    if obstacle_ahead?
+      turn!
+      return
+    end
+
+    @lab_map[row][col] = 'X'
+
+    @previous_states << state
+    case direction
+    when LOOK_UP then self.row -= 1
+    when LOOK_RIGHT then self.col += 1
+    when LOOK_DOWN then self.row += 1
+    when LOOK_LEFT then self.col -= 1
+    end
+
+    return if out?
+
+    @lab_map[row][col] = direction
+  end
+
+  def obstacle_ahead?
+    case direction
+    when LOOK_UP then @lab_map.fetch(row - 1, [])[col] == '#'
+    when LOOK_RIGHT then @lab_map.fetch(row, [])[col + 1] == '#'
+    when LOOK_DOWN then @lab_map.fetch(row + 1, [])[col] == '#'
+    when LOOK_LEFT then @lab_map.fetch(row, [])[col - 1] == '#'
+    end
+  end
+
+  def turn!
+    self.direction = DIRECTIONS.next
+    @previous_states << state
+    @lab_map[row][col] = direction
+  end
+
+  def out? = col < 0 || col >= @lab_map.size || row < 0 || row >= @lab_map.size
+
+  def detect_loop? = @previous_states[...-1].include?([row, col, direction])
+
+  def state = [row, col, direction]
+end
+
 input = <<~TEST_INPUT
   ....#.....
   .........#
@@ -18,95 +79,32 @@ TEST_INPUT
 
 input = IO.read('input.txt')
 
-LOOK_UP = '^'
-LOOK_DOWN = 'v'
-LOOK_RIGHT = '>'
-LOOK_LEFT = '<'
+start = input.delete("\n").index(Guard::LOOK_UP)
+lab_map = input.split("\n").map { |line| line.chars }
+col = start % lab_map[0].size
+row = start / lab_map[0].size
 
-start = input.delete("\n").index(LOOK_UP)
-map = input.split("\n").map { |line| line.chars }
-col = start % map[0].size
-row = start / map[0].size
+loops = 0
 
-class Guard
-  DIRECTIONS = [LOOK_UP, LOOK_RIGHT, LOOK_DOWN, LOOK_LEFT].cycle
+lab_map.size.times do |x|
+  lab_map.size.times do |y|
 
-  def initialize(row:, col:, map:)
-    @row = row
-    @col = col
-    @map = map
-    @direction = LOOK_UP
-  end
+    next if lab_map[x][y] == '#'
 
-  def position
-    [@row, @col]
-  end
+    lab_map_copy = Marshal.load(Marshal.dump(lab_map))
+    lab_map_copy[x][y] = '#'
 
-  def move!
-    return if out?
+    guard = Guard.new(row:, col:, lab_map: lab_map_copy)
 
-    if obstacle_ahead?
-      turn!
-      return
+    loop do
+      if guard.detect_loop?
+        loops += 1
+      end
+
+      break if guard.out? || guard.detect_loop?
+      guard.move!
     end
-
-    @map[@row][@col] = 'X'
-
-    if @direction == LOOK_UP
-      @row -= 1
-
-    elsif @direction == LOOK_RIGHT
-      @col += 1
-
-    elsif @direction == LOOK_DOWN
-      @row += 1
-
-    elsif @direction == LOOK_LEFT
-      @col -= 1
-    end
-
-    return if out?
-
-    @map[@row][@col] = @direction
-  end
-
-  def obstacle_ahead?
-    if @direction == LOOK_UP
-      @map.fetch(@row - 1, [])[@col] == '#'
-
-    elsif @direction == LOOK_RIGHT
-      @map.fetch(@row, [])[@col + 1] == '#'
-
-    elsif @direction == LOOK_DOWN
-      @map.fetch(@row + 1, [])[@col] == '#'
-
-    elsif @direction == LOOK_LEFT
-      @map.fetch(@row, [])[@col - 1] == '#'
-    end
-  end
-
-  def turn!
-    @direction = DIRECTIONS.next
-    @map[@row][@col] = @direction
-  end
-
-  def out?
-    @col < 0 || @col >= @map.size || @row < 0 || @row >= @map.size
   end
 end
 
-guard = Guard.new(row:, col:, map:)
-positions = [[row, col]]
-
-loop do
-  guard.move!
-  positions << guard.position
-  break if guard.out?
-end
-
-
-puts map.map {|r| r.join}.join.chars.count {|c| c=='X'}
-
-# map.each do |r|
-#   puts r.join
-# end
+puts loops
