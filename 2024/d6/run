@@ -3,65 +3,82 @@
 
 require 'debug'
 
-class Guard
+Location = Struct.new(:x, :y)
 
+class Guard
   LOOK_UP = '^'
   LOOK_DOWN = 'v'
   LOOK_RIGHT = '>'
   LOOK_LEFT = '<'
   DIRECTIONS = [LOOK_UP, LOOK_RIGHT, LOOK_DOWN, LOOK_LEFT].cycle
 
-  attr_accessor :row, :col, :direction, :previous_states
+  attr_accessor :lab_map, :current_location, :visited_locations, :current_direction
 
-  def initialize(row:, col:, lab_map:)
-    @row = row
-    @col = col
+  def initialize(lab_map:, start_location:, direction:)
+    @current_location = start_location
+    @current_direction = direction
     @lab_map = lab_map
-    @direction = LOOK_UP
-    @previous_states = [state]
+    @visited_locations = [current_location.clone]
   end
 
   def move!
-    if obstacle_ahead?
-      turn!
-      return
-    end
+    self.lab_map[y][x] = 'X'
 
-    @lab_map[row][col] = 'X'
-
-    @previous_states << state
-    case direction
-    when LOOK_UP then self.row -= 1
-    when LOOK_RIGHT then self.col += 1
-    when LOOK_DOWN then self.row += 1
-    when LOOK_LEFT then self.col -= 1
+    case current_direction
+    when LOOK_UP then current_location.y -= 1
+    when LOOK_DOWN then current_location.y += 1
+    when LOOK_LEFT then current_location.x -= 1
+    when LOOK_RIGHT then current_location.x += 1
     end
 
     return if out?
 
-    @lab_map[row][col] = direction
+    self.lab_map[y][x] = current_direction
+
+    self.visited_locations << current_location.clone
   end
 
   def obstacle_ahead?
-    case direction
-    when LOOK_UP then @lab_map.fetch(row - 1, [])[col] == '#'
-    when LOOK_RIGHT then @lab_map.fetch(row, [])[col + 1] == '#'
-    when LOOK_DOWN then @lab_map.fetch(row + 1, [])[col] == '#'
-    when LOOK_LEFT then @lab_map.fetch(row, [])[col - 1] == '#'
+    case current_direction
+    when LOOK_UP then lab_map.fetch(y - 1, [])[x] == '#'
+    when LOOK_RIGHT then lab_map.fetch(y, [])[x + 1] == '#'
+    when LOOK_DOWN then lab_map.fetch(y + 1, [])[x] == '#'
+    when LOOK_LEFT then lab_map.fetch(y, [])[x - 1] == '#'
     end
   end
 
   def turn!
-    self.direction = DIRECTIONS.next
-    @previous_states << state
-    @lab_map[row][col] = direction
+    self.current_direction = DIRECTIONS.next
+    self.lab_map[y][x] = self.current_direction
+    self.current_location = Location.new(x:, y:)
   end
 
-  def out? = col < 0 || col >= @lab_map.size || row < 0 || row >= @lab_map.size
 
-  def detect_loop? = @previous_states[...-1].include?([row, col, direction])
+  def out? = x < 0 || x >= lab_map[0].size || y < 0 || y >= lab_map.size
 
-  def state = [row, col, direction]
+  def x = current_location.x
+
+  def y = current_location.y
+
+#   def detect_loop? = @previous_states[...-1].include?([row, col, direction])
+end
+
+
+def follow(guard:)
+  return guard if guard.out?
+
+  if guard.obstacle_ahead?
+    guard.turn!
+  else
+
+    guard.move!
+    # given the state of the world make one simulation where the next would be turn! find if it loops if so count
+    # continue the current run
+    # TODO: why does it give me one less?
+  end
+
+
+  return follow(guard:)
 end
 
 input = <<~TEST_INPUT
@@ -81,30 +98,22 @@ input = IO.read('input.txt')
 
 start = input.delete("\n").index(Guard::LOOK_UP)
 lab_map = input.split("\n").map { |line| line.chars }
-col = start % lab_map[0].size
-row = start / lab_map[0].size
+x = start % lab_map.size
+y = start / lab_map[0].size
 
-loops = 0
 
-lab_map.size.times do |x|
-  lab_map.size.times do |y|
+start_location = Location.new(x:, y:)
+guard = Guard.new(lab_map:, start_location:, direction: Guard::LOOK_UP)
+# debugger
 
-    next if lab_map[x][y] == '#'
+guard = follow(guard:)
+# puts guard.lab_map.map{|m|m.join}
+# puts "---------------"
+# lab_map[0].size.times do|xi|
+#   lab_map[0].size.times do|yi|
+#     print guard.visited_locations.include?(Location.new(x: yi, y: xi)) ? 'X' : '.'
+#   end
+#   print "\n"
+# end
 
-    lab_map_copy = Marshal.load(Marshal.dump(lab_map))
-    lab_map_copy[x][y] = '#'
-
-    guard = Guard.new(row:, col:, lab_map: lab_map_copy)
-
-    loop do
-      if guard.detect_loop?
-        loops += 1
-      end
-
-      break if guard.out? || guard.detect_loop?
-      guard.move!
-    end
-  end
-end
-
-puts loops
+puts guard.visited_locations
