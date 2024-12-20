@@ -53,30 +53,52 @@ class Guard
     self.current_location = Location.new(x:, y:)
   end
 
-
   def out? = x < 0 || x >= lab_map[0].size || y < 0 || y >= lab_map.size
 
   def x = current_location.x
 
   def y = current_location.y
 
-#   def detect_loop? = @previous_states[...-1].include?([row, col, direction])
+  def loop_found? = visited_locations[...-1].include?([self.current_location])
+
+  def all_obstacles?
+    [ [y - 1, x],
+      [y, x + 1]  ,
+      [y + 1, x]  ,
+      [y, x - 1]  ,
+    ].all? {|p| self.lab_map[p[0], p[1]] == '#'}
+  end
+
+  def possible_walls?
+    [ [y - 1, x],
+      [y, x + 1]  ,
+      [y + 1, x]  ,
+      [y, x - 1]  ,
+# reject what is in front of you
+    # ].reject {|p| x == p[1] && y == p[0] }
+    #   .map {|p| Location.new(x: p[1], y: p[0])}
+    #   .include?(self.current_location)
+  end
 end
 
+loop_found = 0
 
 def follow(guard:)
+  return guard if guard.loop_found?
   return guard if guard.out?
+  return guard if guard.all_obstacles?
 
   if guard.obstacle_ahead?
     guard.turn!
   else
+    guard.possible_walls.each do |wall|
+      loop_found += 1 if follow(guard:).loop_found?
+
+      guard.move!(wall)
+    end
 
     guard.move!
-    # given the state of the world make one simulation where the next would be turn! find if it loops if so count
-    # continue the current run
-    # TODO: why does it give me one less?
   end
-
 
   return follow(guard:)
 end
