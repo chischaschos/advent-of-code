@@ -12,17 +12,27 @@ class Guard
   LOOK_LEFT = '<'
   DIRECTIONS = [LOOK_UP, LOOK_RIGHT, LOOK_DOWN, LOOK_LEFT].cycle
 
-  attr_accessor :lab_map, :current_location, :visited_locations, :current_direction
+  attr_accessor :lab_map, :current_location, :visited_locations, :current_direction, :wall_added
 
   def initialize(lab_map:, start_location:, direction:)
     @current_location = start_location
     @current_direction = direction
     @lab_map = lab_map
     @visited_locations = [current_location.clone]
+    @wall_added = false
+  end
+
+  def clone
+    clone = super
+    clone.current_location = current_location.clone
+    clone.current_direction = current_direction.clone
+    clone.lab_map = lab_map.map(&:clone)
+    clone.visited_locations = visited_locations.clone
+    clone
   end
 
   def move!
-    self.lab_map[y][x] = 'X'
+    lab_map[y][x] = 'X'
 
     case current_direction
     when LOOK_UP then current_location.y -= 1
@@ -33,9 +43,10 @@ class Guard
 
     return if out?
 
-    self.lab_map[y][x] = current_direction
+    lab_map[y][x] = current_direction
 
-    self.visited_locations << current_location.clone
+    # puts current_location
+    visited_locations << current_location.clone
   end
 
   def obstacle_ahead?
@@ -49,58 +60,72 @@ class Guard
 
   def turn!
     self.current_direction = DIRECTIONS.next
-    self.lab_map[y][x] = self.current_direction
+    lab_map[y][x] = current_direction
     self.current_location = Location.new(x:, y:)
   end
 
-  def out? = x < 0 || x >= lab_map[0].size || y < 0 || y >= lab_map.size
+  def out?(xi: x, yi: y)
+    xi.negative? || xi >= lab_map[0].size || yi.negative? || yi >= lab_map.size
+  end
 
   def x = current_location.x
 
   def y = current_location.y
 
-  def loop_found? = visited_locations[...-1].include?([self.current_location])
+  def loop_found? = visited_locations[...-1].include?(current_location)
 
-  def all_obstacles?
-    [ [y - 1, x],
-      [y, x + 1]  ,
-      [y + 1, x]  ,
-      [y, x - 1]  ,
-    ].all? {|p| self.lab_map[p[0], p[1]] == '#'}
+  def surrounded?
+    [[y - 1, x],
+     [y, x + 1],
+     [y + 1, x],
+     [y, x - 1]].all? { |p| lab_map[p[0]][p[1]] == '#' }
   end
 
-  def possible_walls?
-    [ [y - 1, x],
-      [y, x + 1]  ,
-      [y + 1, x]  ,
-      [y, x - 1]  ,
-# reject what is in front of you
-    # ].reject {|p| x == p[1] && y == p[0] }
-    #   .map {|p| Location.new(x: p[1], y: p[0])}
-    #   .include?(self.current_location)
+  def surrounding_locations = {
+    LOOK_UP => Location.new(x: x, y: y - 1),
+    LOOK_RIGHT => Location.new(x: x + 1, y: y),
+    LOOK_DOWN => Location.new(x: x, y: y + 1),
+    LOOK_LEFT => Location.new(x: x - 1, y: y)
+  }
+
+  def possible_walls
+    surrounding_locations
+      .reject { |k, _| k == current_direction }
+      .reject { |_, v| out?(xi: v.x, yi: v.y) }
+      .reject { |_, v| lab_map[v.y][v.x] == '#' }
+      .map { |_, v| v }
+  end
+
+  def add_wall!(wall_pos)
+    lab_map[wall_pos.y][wall_pos.x] = '#'
+    self.wall_added = true
   end
 end
 
-loop_found = 0
-
 def follow(guard:)
-  return guard if guard.loop_found?
-  return guard if guard.out?
-  return guard if guard.all_obstacles?
+  if guard.loop_found?
+    puts 'F'
+    return
+  end
+
+  return if guard.out? || guard.surrounded?
+
+  unless guard.wall_added
+    guard.possible_walls.each do |wall_pos|
+      guard_clone = guard.clone
+      guard_clone.add_wall!(wall_pos)
+
+      follow(guard: guard_clone)
+    end
+  end
 
   if guard.obstacle_ahead?
     guard.turn!
   else
-    guard.possible_walls.each do |wall|
-      loop_found += 1 if follow(guard:).loop_found?
-
-      guard.move!(wall)
-    end
-
     guard.move!
   end
 
-  return follow(guard:)
+  follow(guard:)
 end
 
 input = <<~TEST_INPUT
@@ -116,19 +141,18 @@ input = <<~TEST_INPUT
   ......#...
 TEST_INPUT
 
-input = IO.read('input.txt')
+# input = IO.read('input.txt')
 
 start = input.delete("\n").index(Guard::LOOK_UP)
-lab_map = input.split("\n").map { |line| line.chars }
+lab_map = input.split("\n").map(&:chars)
 x = start % lab_map.size
 y = start / lab_map[0].size
-
 
 start_location = Location.new(x:, y:)
 guard = Guard.new(lab_map:, start_location:, direction: Guard::LOOK_UP)
 # debugger
 
-guard = follow(guard:)
+follow(guard:)
 # puts guard.lab_map.map{|m|m.join}
 # puts "---------------"
 # lab_map[0].size.times do|xi|
@@ -137,5 +161,7 @@ guard = follow(guard:)
 #   end
 #   print "\n"
 # end
-
-puts guard.visited_locations
+# puts guard.visited_locations
+#
+#
+#
