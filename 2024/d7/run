@@ -21,6 +21,8 @@ TEST_INPUT
 
 # input = IO.read('input.txt')
 
+valid_calibrations = []
+
 input.split("\n").each do |line|
   total, rest = line.split(":")
   nums = rest.split.map(&:to_i)
@@ -35,16 +37,16 @@ input.split("\n").each do |line|
     prev_node = current_node
   end
 
-
   graph = Graph.new(root: root_node)
 
   graph.paths do |p|
-    puts p.join
-  end
-  # puts graph.to_s
+    path_total = calculate(p)
 
+    if path_total == total.to_i
+      valid_calibrations << path_total
+      break
+    end
+  end
 end
 
-
-
-
+puts "Total calibration result #{valid_calibrations.sum}"
