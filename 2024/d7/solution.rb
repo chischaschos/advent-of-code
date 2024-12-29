@@ -39,3 +39,18 @@ class Graph
     end
   end
 end
+
+def calculate(path)
+  first = path.shift
+
+  calc(first, path)
+end
+
+def calc(total, tuple)
+  return total if tuple.empty?
+
+  op = tuple.shift
+  num = tuple.shift
+
+  calc(total.send(op, num), tuple)
+end
