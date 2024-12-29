@@ -52,5 +52,10 @@ def calc(total, tuple)
   op = tuple.shift
   num = tuple.shift
 
+  if op == :|
+    num = total.to_s + num.to_s
+    return calc(num.to_i, tuple)
+  end
+
   calc(total.send(op, num), tuple)
 end

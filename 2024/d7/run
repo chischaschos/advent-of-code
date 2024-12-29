@@ -3,8 +3,13 @@
 
 require 'debug'
 require_relative 'solution'
+
 # input = <<~TEST_INPUT
 #   190: 10 19
+# TEST_INPUT
+
+# input = <<~TEST_INPUT
+#   192: 17 8 14
 # TEST_INPUT
 
 # input = <<~TEST_INPUT
@@ -34,6 +39,7 @@ input.split("\n").each do |line|
     current_node = Node.new(v: n, edges: [], depth: prev_node.depth + 1)
     prev_node.edges << Edge.new(node: current_node, v: :*)
     prev_node.edges << Edge.new(node: current_node, v: :+)
+    prev_node.edges << Edge.new(node: current_node, v: :|)
     prev_node = current_node
   end
 
